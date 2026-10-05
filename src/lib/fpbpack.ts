@@ -107,7 +107,148 @@ export interface DashboardState {
   errors: string[];
   inventoryModifiedAt: string | null;
   reportModifiedAt: string | null;
+  mode: 'live' | 'demo';
 }
+
+
+const demoInventory: Inventory = {
+  schema_version: 2,
+  generated_at: new Date().toISOString(),
+  server_root: '/demo/server',
+  server_mods_path: 'mods',
+  client_mods_path: 'automodpack/host-modpack/main/mods',
+  summary: {
+    total: 12,
+    server: 8,
+    client: 4,
+    modrinth_exact: 9,
+    curseforge_exact: 3,
+    unmatched: 0,
+    metadata_unreadable: 0,
+  },
+  mods: [
+    {
+      location: 'server',
+      path: 'mods/create.jar',
+      filename: 'create-6.0.10.jar',
+      size: 0,
+      sha1: 'demo-create',
+      sha512: 'demo-create',
+      metadata: [{name: 'Create', version: '6.0.10'}],
+    },
+    {
+      location: 'server',
+      path: 'mods/ftb-library.jar',
+      filename: 'ftb-library-neoforge-2101.1.36.jar',
+      size: 0,
+      sha1: 'demo-ftb',
+      sha512: 'demo-ftb',
+      metadata: [{name: 'FTB Library', version: '2101.1.36'}],
+    },
+    {
+      location: 'client',
+      path: 'automodpack/host-modpack/main/mods/immediatelyfast.jar',
+      filename: 'ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar',
+      size: 0,
+      sha1: 'demo-fast',
+      sha512: 'demo-fast',
+      metadata: [{name: 'ImmediatelyFast', version: '1.6.14'}],
+    },
+    {
+      location: 'server',
+      path: 'mods/bluemap3d.jar',
+      filename: 'bluemap3d-bundle-4.0.0-1.21.1.jar',
+      size: 0,
+      sha1: 'demo-bm3d',
+      sha512: 'demo-bm3d',
+      metadata: [{name: 'BlueMap3D', version: '4.0.0'}],
+    },
+    {
+      location: 'server',
+      path: 'mods/player-history-recorder.jar',
+      filename: 'player-history-recorder-2.2.0.jar',
+      size: 0,
+      sha1: 'demo-history',
+      sha512: 'demo-history',
+      metadata: [{name: 'Player History Recorder', version: '2.2.0'}],
+    },
+  ],
+};
+
+const demoReport: MigrationReport = {
+  schema_version: 3,
+  inventory_schema_version: 2,
+  summary: {
+    inventory_jars: 12,
+    unique_artifacts: 12,
+    duplicate_artifacts: 0,
+    generated_projects: 9,
+    unresolved: 0,
+    conflict_projects: 0,
+    placement_warnings: 0,
+    pinned_artifacts: 3,
+  },
+  managed: [
+    {
+      provider: 'modrinth',
+      project_id: 'demo-create',
+      version_id: '6.0.10',
+      name: 'Create',
+      filename: 'create-6.0.10.jar',
+      sha512: 'demo-create',
+      side: 'both',
+      deployment: 'server',
+      source_paths: [{location: 'server', path: 'mods/create.jar'}],
+    },
+    {
+      provider: 'curseforge',
+      project_id: 'demo-ftb',
+      file_id: 1,
+      name: 'FTB Library',
+      filename: 'ftb-library-neoforge-2101.1.36.jar',
+      sha512: 'demo-ftb',
+      side: 'both',
+      deployment: 'server',
+      source_paths: [{location: 'server', path: 'mods/ftb-library.jar'}],
+    },
+    {
+      provider: 'modrinth',
+      project_id: 'demo-fast',
+      version_id: '1.6.14',
+      name: 'ImmediatelyFast',
+      filename: 'ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar',
+      sha512: 'demo-fast',
+      side: 'client',
+      deployment: 'client',
+      source_paths: [
+        {
+          location: 'client',
+          path: 'automodpack/host-modpack/main/mods/immediatelyfast.jar',
+        },
+      ],
+    },
+  ],
+  pinned_artifacts: [
+    {
+      sha512: 'demo-bm3d',
+      filename: 'bluemap3d-bundle-4.0.0-1.21.1.jar',
+      reason: 'Demo: intentionally managed outside Packwiz.',
+      sources: [{location: 'server', path: 'mods/bluemap3d.jar'}],
+    },
+    {
+      sha512: 'demo-history',
+      filename: 'player-history-recorder-2.2.0.jar',
+      reason: 'Demo: intentionally managed outside Packwiz.',
+      sources: [{location: 'server', path: 'mods/player-history-recorder.jar'}],
+    },
+    {
+      sha512: 'demo-custom',
+      filename: 'fpbcraft-compat-1.0.2-neoforge-1.21.1.jar',
+      reason: 'Demo: intentionally managed outside Packwiz.',
+      sources: [{location: 'server', path: 'mods/fpbcraft-compat.jar'}],
+    },
+  ],
+};
 
 async function readJson<T>(path: string): Promise<T> {
   const content = await readFile(path, 'utf8');
@@ -123,6 +264,17 @@ async function modifiedAt(path: string): Promise<string | null> {
 }
 
 export async function loadDashboardState(): Promise<DashboardState> {
+  if (process.env.FPBPACK_DEMO === 'true') {
+    return {
+      inventory: demoInventory,
+      report: demoReport,
+      errors: [],
+      inventoryModifiedAt: demoInventory.generated_at,
+      reportModifiedAt: demoInventory.generated_at,
+      mode: 'demo',
+    };
+  }
+
   const errors: string[] = [];
 
   const [inventoryResult, reportResult, inventoryModifiedAt, reportModifiedAt] =
@@ -149,6 +301,7 @@ export async function loadDashboardState(): Promise<DashboardState> {
     errors,
     inventoryModifiedAt,
     reportModifiedAt,
+    mode: 'live',
   };
 }
 
