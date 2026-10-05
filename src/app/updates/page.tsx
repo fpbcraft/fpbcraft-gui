@@ -1,10 +1,10 @@
+'use client';
+
 import {EmptyState, PageHeader, Pill} from '@/components/ui';
-import {loadManagementState} from '@/lib/management';
+import {useManagement} from '@/components/management-provider';
 
-export const dynamic = 'force-dynamic';
-
-export default async function UpdatesPage() {
-  const state = await loadManagementState();
+export default function UpdatesPage() {
+  const {state} = useManagement();
 
   return (
     <>
