@@ -127,7 +127,7 @@ export default function SettingsPage() {
               {state.apiUrlSource === 'browser'
                 ? 'Browser → LAN'
                 : state.apiUrlSource === 'environment'
-                  ? 'GUI server deployment default'
+                  ? 'Deployment default → browser → LAN'
                   : 'Fallback/demo data'}
             </strong>
           </div>
@@ -160,8 +160,8 @@ export default function SettingsPage() {
                 type="button"
                 className="secondary-button"
                 onClick={() => {
-                  resetBrowserApiUrl();
                   setApiUrl(state.environmentApiUrl ?? '');
+                  void resetBrowserApiUrl();
                 }}
               >
                 Clear browser URL
