@@ -53,6 +53,12 @@ FPBCRAFT_SERVER_ROOT=/mnt/gamestorage/crafty-4/servers/99ea61a0-be6a-4d45-987b-d
 
 Do not expose the initial dashboard directly to the public internet. Authentication will be added before write/deploy controls.
 
+## Vercel
+
+The GitHub repository is also linked to Vercel. Vercel deployments automatically use a safe demo-data mode because they cannot access the Unraid bind mounts. The production alias is `https://fpbcraft-gui.vercel.app`.
+
+The Vercel version is currently a UI preview, not a live server control surface. Live remote management will require an authenticated FPBPack API rather than exposing Unraid filesystem paths.
+
 ## Development
 
 Requires Node.js 24.
