@@ -1,6 +1,6 @@
 # FPBCraft GUI — Implementation Plan
 
-Status: **planned**
+Status: **in progress — Slice 1**\n\nProgress log: [IMPLEMENTATION_PROGRESS.md](./IMPLEMENTATION_PROGRESS.md)
 
 This document turns the product contract in [PRODUCT_ARCHITECTURE.md](./PRODUCT_ARCHITECTURE.md) into a deliberately short implementation sequence.
 
