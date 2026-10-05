@@ -30,7 +30,7 @@ interface ManagementContextValue {
   connectionStatus: ConnectionStatus;
   connectionError: string | null;
   connect: (value: string) => Promise<ConnectResult>;
-  resetBrowserApiUrl: () => void;
+  resetBrowserApiUrl: () => Promise<ConnectResult>;
   refresh: () => Promise<ConnectResult>;
 }
 
@@ -65,7 +65,11 @@ async function fetchApi<T>(baseUrl: string, path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-async function loadBrowserState(baseUrl: string): Promise<ManagementState> {
+async function loadBrowserState(
+  baseUrl: string,
+  source: 'browser' | 'environment',
+  environmentApiUrl: string | null,
+): Promise<ManagementState> {
   const [status, modsResponse, diagnostics] = await Promise.all([
     fetchApi<ManagementStatus>(baseUrl, '/api/status'),
     fetchApi<{mods: ManagementMod[]}>(baseUrl, '/api/mods'),
@@ -78,8 +82,8 @@ async function loadBrowserState(baseUrl: string): Promise<ManagementState> {
     diagnostics,
     source: 'api',
     apiUrl: baseUrl,
-    apiUrlSource: 'browser',
-    environmentApiUrl: null,
+    apiUrlSource: source,
+    environmentApiUrl,
     errors: [],
   };
 }
@@ -103,21 +107,24 @@ export function ManagementProvider({
 }) {
   const [state, setState] = useState(initialState);
   const [browserApiUrl, setBrowserApiUrl] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
-    initialState.source === 'api' ? 'connected' : 'idle',
-  );
+  const [connectionStatus, setConnectionStatus] =
+    useState<ConnectionStatus>('idle');
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const load = useCallback(
-    async (baseUrl: string): Promise<ConnectResult> => {
+    async (
+      baseUrl: string,
+      source: 'browser' | 'environment',
+    ): Promise<ConnectResult> => {
       setConnectionStatus('connecting');
       setConnectionError(null);
       try {
-        const next = await loadBrowserState(baseUrl);
-        setState({
-          ...next,
-          environmentApiUrl: initialState.environmentApiUrl,
-        });
+        const next = await loadBrowserState(
+          baseUrl,
+          source,
+          initialState.environmentApiUrl,
+        );
+        setState(next);
         setConnectionStatus('connected');
         return {ok: true};
       } catch (error: unknown) {
@@ -125,7 +132,7 @@ export function ManagementProvider({
         setState({
           ...initialState,
           apiUrl: baseUrl,
-          apiUrlSource: 'browser',
+          apiUrlSource: source,
           errors: [message, ...initialState.errors],
         });
         setConnectionStatus('error');
@@ -153,42 +160,52 @@ export function ManagementProvider({
 
       window.localStorage.setItem(API_URL_STORAGE_KEY, normalized);
       setBrowserApiUrl(normalized);
-      return load(normalized);
+      return load(normalized, 'browser');
     },
     [load],
   );
 
-  const resetBrowserApiUrl = useCallback(() => {
+  const resetBrowserApiUrl = useCallback(async (): Promise<ConnectResult> => {
     window.localStorage.removeItem(API_URL_STORAGE_KEY);
     setBrowserApiUrl(null);
     setConnectionError(null);
-    setConnectionStatus(initialState.source === 'api' ? 'connected' : 'idle');
+
+    if (initialState.environmentApiUrl) {
+      return load(initialState.environmentApiUrl, 'environment');
+    }
+
+    setConnectionStatus('idle');
     setState(initialState);
-  }, [initialState]);
+    return {ok: true};
+  }, [initialState, load]);
 
   const refresh = useCallback(async (): Promise<ConnectResult> => {
-    if (!browserApiUrl) {
-      return {ok: false, error: 'No browser API URL is configured.'};
+    if (!state.apiUrl || state.apiUrlSource === 'none') {
+      return {ok: false, error: 'No API URL is configured.'};
     }
-    return load(browserApiUrl);
-  }, [browserApiUrl, load]);
+    return load(state.apiUrl, state.apiUrlSource);
+  }, [state.apiUrl, state.apiUrlSource, load]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(API_URL_STORAGE_KEY);
-    if (!stored) return;
-
-    let normalized: string;
-    try {
-      normalized = normalizeApiUrl(stored);
-      if (!normalized) return;
-    } catch {
-      window.localStorage.removeItem(API_URL_STORAGE_KEY);
-      return;
+    if (stored) {
+      let normalized: string;
+      try {
+        normalized = normalizeApiUrl(stored);
+        if (normalized) {
+          setBrowserApiUrl(normalized);
+          void load(normalized, 'browser');
+          return;
+        }
+      } catch {
+        window.localStorage.removeItem(API_URL_STORAGE_KEY);
+      }
     }
 
-    setBrowserApiUrl(normalized);
-    void load(normalized);
-  }, [load]);
+    if (initialState.environmentApiUrl) {
+      void load(initialState.environmentApiUrl, 'environment');
+    }
+  }, [initialState.environmentApiUrl, load]);
 
   const value = useMemo(
     () => ({
