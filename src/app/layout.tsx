@@ -1,6 +1,8 @@
 import type {Metadata} from 'next';
 import type {ReactNode} from 'react';
+import {ManagementProvider} from '@/components/management-provider';
 import {Shell} from '@/components/shell';
+import {loadManagementState} from '@/lib/management';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,11 +10,15 @@ export const metadata: Metadata = {
   description: 'FPBPack and FPBCraft server dashboard',
 };
 
-export default function RootLayout({children}: {children: ReactNode}) {
+export default async function RootLayout({children}: {children: ReactNode}) {
+  const initialState = await loadManagementState();
+
   return (
     <html lang="en">
       <body>
-        <Shell>{children}</Shell>
+        <ManagementProvider initialState={initialState}>
+          <Shell>{children}</Shell>
+        </ManagementProvider>
       </body>
     </html>
   );
