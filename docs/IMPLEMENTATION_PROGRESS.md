@@ -49,6 +49,8 @@ The user merges PRs manually. These branches must not be merged automatically.
 
 - [x] Move navigation to Overview / Updates / Mods / History / Settings.
 - [x] Add a server-side FPBPack API adapter using `FPBPACK_API_URL`.
+- [x] Allow the API URL to be configured from the web GUI and persisted per browser, with `FPBPACK_API_URL` retained as the deployment default.
+- [x] Show active backend URL/source and connection status in Settings, with reset-to-default support.
 - [x] Preserve the existing read-only JSON mount as a compatibility fallback.
 - [x] Preserve Vercel demo behavior.
 - [x] Replace the migration-oriented overview with an inbox-oriented management overview.
