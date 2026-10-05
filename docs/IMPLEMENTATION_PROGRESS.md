@@ -48,11 +48,13 @@ The user merges PRs manually. These branches must not be merged automatically.
 ### Completed
 
 - [x] Move navigation to Overview / Updates / Mods / History / Settings.
-- [x] Add a server-side FPBPack API adapter using `FPBPACK_API_URL`.
-- [x] Allow the API URL to be configured from the web GUI and persisted per browser, with `FPBPACK_API_URL` retained as the deployment default.
-- [x] Show active backend URL/source and connection status in Settings, with reset-to-default support.
+- [x] Keep `FPBPACK_API_URL` as an optional server-side deployment default/fallback.
+- [x] Allow the API URL to be configured in the GUI and persisted in browser local storage.
+- [x] Connect to browser-configured APIs directly from the user's device, so a Vercel-hosted GUI can reach an Unraid LAN service without exposing FPBPack publicly.
+- [x] Add Chrome Local Network Access-compatible browser requests and exact-origin backend CORS configuration.
+- [x] Show active backend URL/source, GUI CORS origin, connection status, retry, and clear controls in Settings.
 - [x] Preserve the existing read-only JSON mount as a compatibility fallback.
-- [x] Preserve Vercel demo behavior.
+- [x] Preserve Vercel demo behavior as the initial/fallback state while allowing the browser to replace it with live LAN data.
 - [x] Replace the migration-oriented overview with an inbox-oriented management overview.
 - [x] Surface diagnostics and external-management problems on the overview.
 - [x] Move the Mods browser onto the domain management model rather than raw Packwiz joins.
