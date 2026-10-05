@@ -27,6 +27,7 @@ The user merges PRs manually. These branches must not be merged automatically.
 - [x] Add `fpbpack doctor --inventory ... --report ...`.
 - [x] Add `fpbpack serve --inventory ... --report ...`.
 - [x] Add read-only endpoints for status, inventory, mods, diagnostics, and health.
+- [x] Add exact-origin CORS and legacy PNA preflight compatibility for direct browser-to-LAN API access.
 - [x] Reload source JSON on each API request so a new inventory is visible without restarting the service.
 - [x] Add unit tests for drift detection, domain projection, and HTTP behavior.
 - [x] Document the diagnostics/API commands in the FPBPack README.
