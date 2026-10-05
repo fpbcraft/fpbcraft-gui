@@ -1,7 +1,9 @@
-import {PageHeader, Pill} from '@/components/ui';
-import {loadManagementState, type ManagementMod} from '@/lib/management';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import {useMemo, useState} from 'react';
+import {PageHeader, Pill} from '@/components/ui';
+import {useManagement} from '@/components/management-provider';
+import type {ManagementMod} from '@/lib/management';
 
 const PAGE_SIZE = 50;
 
@@ -14,61 +16,52 @@ function managementTone(
   return 'neutral';
 }
 
-export default async function ModsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    q?: string;
-    page?: string;
-    deployment?: string;
-    management?: string;
-    provider?: string;
-  }>;
-}) {
-  const state = await loadManagementState();
-  const params = await searchParams;
-  const q = (params.q ?? '').trim().toLowerCase();
-  const deployment = params.deployment ?? 'all';
-  const management = params.management ?? 'all';
-  const provider = params.provider ?? 'all';
-  const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
+export default function ModsPage() {
+  const {state, connectionStatus} = useManagement();
+  const [q, setQ] = useState('');
+  const [deployment, setDeployment] = useState('all');
+  const [management, setManagement] = useState('all');
+  const [provider, setProvider] = useState('all');
+  const [page, setPage] = useState(1);
 
-  const providers = [...new Set(state.mods.map((mod) => mod.provider).filter(Boolean))]
-    .map(String)
-    .sort((a, b) => a.localeCompare(b));
+  const providers = useMemo(
+    () =>
+      [...new Set(state.mods.map((mod) => mod.provider).filter(Boolean))]
+        .map(String)
+        .sort((a, b) => a.localeCompare(b)),
+    [state.mods],
+  );
 
-  const filtered = state.mods.filter((mod) => {
-    const text = [
-      mod.name,
-      mod.filename,
-      mod.installed_version ?? '',
-      mod.provider ?? '',
-      mod.project_id ?? '',
-    ]
-      .join(' ')
-      .toLowerCase();
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return state.mods.filter((mod) => {
+      const text = [
+        mod.name,
+        mod.filename,
+        mod.installed_version ?? '',
+        mod.provider ?? '',
+        mod.project_id ?? '',
+      ]
+        .join(' ')
+        .toLowerCase();
 
-    return (
-      (!q || text.includes(q)) &&
-      (deployment === 'all' || mod.deployment === deployment) &&
-      (management === 'all' || mod.management === management) &&
-      (provider === 'all' || mod.provider === provider)
-    );
-  });
+      return (
+        (!needle || text.includes(needle)) &&
+        (deployment === 'all' || mod.deployment === deployment) &&
+        (management === 'all' || mod.management === management) &&
+        (provider === 'all' || mod.provider === provider)
+      );
+    });
+  }, [state.mods, q, deployment, management, provider]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const pageHref = (nextPage: number) => {
-    const query = new URLSearchParams();
-    if (params.q) query.set('q', params.q);
-    if (deployment !== 'all') query.set('deployment', deployment);
-    if (management !== 'all') query.set('management', management);
-    if (provider !== 'all') query.set('provider', provider);
-    query.set('page', String(nextPage));
-    return '/mods?' + query.toString();
+  const updateFilter = (setter: (value: string) => void, value: string) => {
+    setter(value);
+    setPage(1);
   };
 
   return (
@@ -79,7 +72,13 @@ export default async function ModsPage({
         description="Installed JARs with management identity, placement, and provider ownership."
         action={
           <Pill tone={state.source === 'api' ? 'good' : 'blue'}>
-            {state.source === 'api' ? 'FPBPack API' : 'Compatibility mode'}
+            {connectionStatus === 'connecting'
+              ? 'Connecting…'
+              : state.source === 'api'
+                ? state.apiUrlSource === 'browser'
+                  ? 'LAN API'
+                  : 'FPBPack API'
+                : 'Compatibility mode'}
           </Pill>
         }
       />
@@ -93,16 +92,16 @@ export default async function ModsPage({
         </section>
       ) : null}
 
-      <form className="filters" action="/mods">
+      <div className="filters">
         <input
-          name="q"
-          defaultValue={params.q ?? ''}
+          value={q}
+          onChange={(event) => updateFilter(setQ, event.target.value)}
           placeholder="Search name, filename, version…"
           aria-label="Search mods"
         />
         <select
-          name="deployment"
-          defaultValue={deployment}
+          value={deployment}
+          onChange={(event) => updateFilter(setDeployment, event.target.value)}
           aria-label="Filter by deployment"
         >
           <option value="all">All placements</option>
@@ -110,8 +109,8 @@ export default async function ModsPage({
           <option value="client">Client-only</option>
         </select>
         <select
-          name="management"
-          defaultValue={management}
+          value={management}
+          onChange={(event) => updateFilter(setManagement, event.target.value)}
           aria-label="Filter by management state"
         >
           <option value="all">All management</option>
@@ -120,7 +119,11 @@ export default async function ModsPage({
           <option value="unresolved">Unresolved</option>
           <option value="external">External change</option>
         </select>
-        <select name="provider" defaultValue={provider} aria-label="Filter by provider">
+        <select
+          value={provider}
+          onChange={(event) => updateFilter(setProvider, event.target.value)}
+          aria-label="Filter by provider"
+        >
           <option value="all">All providers</option>
           {providers.map((item) => (
             <option value={item} key={item}>
@@ -128,8 +131,20 @@ export default async function ModsPage({
             </option>
           ))}
         </select>
-        <button type="submit">Filter</button>
-      </form>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => {
+            setQ('');
+            setDeployment('all');
+            setManagement('all');
+            setProvider('all');
+            setPage(1);
+          }}
+        >
+          Reset
+        </button>
+      </div>
 
       <section className="panel table-panel">
         <div className="table-summary">
@@ -182,8 +197,28 @@ export default async function ModsPage({
           </table>
         </div>
         <div className="pagination">
-          {safePage > 1 ? <a href={pageHref(safePage - 1)}>Previous</a> : <span />}
-          {safePage < totalPages ? <a href={pageHref(safePage + 1)}>Next</a> : <span />}
+          {safePage > 1 ? (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setPage(safePage - 1)}
+            >
+              Previous
+            </button>
+          ) : (
+            <span />
+          )}
+          {safePage < totalPages ? (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setPage(safePage + 1)}
+            >
+              Next
+            </button>
+          ) : (
+            <span />
+          )}
         </div>
       </section>
     </>
