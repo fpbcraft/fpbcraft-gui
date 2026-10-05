@@ -1,60 +1,72 @@
+'use client';
+
+import {useEffect, useState, type FormEvent} from 'react';
 import {PageHeader, Pill} from '@/components/ui';
-import {loadManagementState} from '@/lib/management';
-import {resetApiUrl, saveApiUrl} from './actions';
+import {useManagement} from '@/components/management-provider';
 
-export const dynamic = 'force-dynamic';
+export default function SettingsPage() {
+  const {
+    state,
+    browserApiUrl,
+    connectionStatus,
+    connectionError,
+    connect,
+    resetBrowserApiUrl,
+    refresh,
+  } = useManagement();
+  const [apiUrl, setApiUrl] = useState(
+    browserApiUrl ?? state.apiUrl ?? state.environmentApiUrl ?? '',
+  );
+  const [browserOrigin, setBrowserOrigin] = useState('');
 
-export default async function SettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{connection?: string; message?: string}>;
-}) {
-  const [state, params] = await Promise.all([loadManagementState(), searchParams]);
-  const connected = state.source === 'api';
+  useEffect(() => {
+    setBrowserOrigin(window.location.origin);
+  }, []);
+
+  useEffect(() => {
+    if (browserApiUrl) {
+      setApiUrl(browserApiUrl);
+    }
+  }, [browserApiUrl]);
+
+  const connected = state.source === 'api' && connectionStatus === 'connected';
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await connect(apiUrl);
+  }
 
   return (
     <>
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Choose which FPBPack backend this browser should use."
+        description="Connect this browser directly to the FPBPack API on your local network."
         action={
-          <Pill tone={connected ? 'good' : state.apiUrl ? 'warn' : 'blue'}>
-            {connected ? 'Connected' : state.apiUrl ? 'Connection failed' : state.source}
+          <Pill
+            tone={
+              connectionStatus === 'connected'
+                ? 'good'
+                : connectionStatus === 'error'
+                  ? 'warn'
+                  : 'blue'
+            }
+          >
+            {connectionStatus === 'connecting'
+              ? 'Connecting…'
+              : connectionStatus === 'connected'
+                ? 'Connected'
+                : connectionStatus === 'error'
+                  ? 'Connection failed'
+                  : state.source}
           </Pill>
         }
       />
 
-      {params.connection === 'saved' && connected ? (
-        <section className="notice notice-good">
-          <strong>Backend connected</strong>
-          <p>The browser-specific FPBPack API URL was saved and verified.</p>
-        </section>
-      ) : null}
-
-      {params.connection === 'default' ? (
-        <section className="notice">
-          <strong>Browser override cleared</strong>
-          <p>
-            The GUI is now using the deployment default, or compatibility data if no
-            default backend is configured.
-          </p>
-        </section>
-      ) : null}
-
-      {params.connection === 'invalid' ? (
-        <section className="notice notice-warn">
-          <strong>Invalid backend URL</strong>
-          <p>{params.message ?? 'Enter a valid http:// or https:// URL.'}</p>
-        </section>
-      ) : null}
-
-      {state.errors.length ? (
+      {connectionError ? (
         <section className="notice notice-warn">
           <strong>Connection warning</strong>
-          {state.errors.map((error) => (
-            <p key={error}>{error}</p>
-          ))}
+          <p>{connectionError}</p>
         </section>
       ) : null}
 
@@ -62,19 +74,19 @@ export default async function SettingsPage({
         <div className="panel-heading">
           <div>
             <span className="eyebrow">FPBPack API</span>
-            <h2>Backend connection</h2>
+            <h2>Browser connection</h2>
           </div>
           <Pill tone={connected ? 'good' : 'neutral'}>
             {connected ? 'Live backend' : 'Not connected'}
           </Pill>
         </div>
 
-        <form className="connection-form" action={saveApiUrl}>
+        <form className="connection-form" onSubmit={handleSubmit}>
           <label htmlFor="api-url">
             API URL
             <span>
-              Stored for this browser. The GUI server connects to this address, so it
-              must be reachable from the GUI container.
+              Stored only in this browser. Requests go from this device directly to
+              Unraid; the Vercel server does not proxy or receive the API traffic.
             </span>
           </label>
           <div className="connection-input-row">
@@ -83,23 +95,40 @@ export default async function SettingsPage({
               name="apiUrl"
               type="url"
               inputMode="url"
-              defaultValue={state.apiUrl ?? state.environmentApiUrl ?? ''}
-              placeholder="http://fpbpack:8787"
+              value={apiUrl}
+              onChange={(event) => setApiUrl(event.target.value)}
+              placeholder="http://192.168.1.50:8787"
               autoComplete="url"
             />
-            <button type="submit">Save &amp; connect</button>
+            <button type="submit" disabled={connectionStatus === 'connecting'}>
+              {connectionStatus === 'connecting' ? 'Connecting…' : 'Save & connect'}
+            </button>
           </div>
         </form>
+
+        <div className="notice">
+          <strong>LAN access</strong>
+          <p>
+            When the GUI is hosted over HTTPS, Chrome may ask for permission to access
+            devices on your local network. Allow it for this site. FPBPack must listen
+            on the Unraid LAN interface and allow this exact web origin with
+            <span className="mono">
+              {' '}
+              --cors-origin {browserOrigin || 'https://your-gui.example'}
+            </span>
+            .
+          </p>
+        </div>
 
         <div className="connection-meta">
           <div>
             <span>Active source</span>
             <strong>
               {state.apiUrlSource === 'browser'
-                ? 'Browser override'
+                ? 'Browser → LAN'
                 : state.apiUrlSource === 'environment'
-                  ? 'Deployment default'
-                  : 'No API configured'}
+                  ? 'GUI server deployment default'
+                  : 'Fallback/demo data'}
             </strong>
           </div>
           <div>
@@ -107,18 +136,39 @@ export default async function SettingsPage({
             <strong className="mono">{state.apiUrl ?? '—'}</strong>
           </div>
           <div>
-            <span>Deployment default</span>
-            <strong className="mono">{state.environmentApiUrl ?? '—'}</strong>
+            <span>Saved browser URL</span>
+            <strong className="mono">{browserApiUrl ?? '—'}</strong>
+          </div>
+          <div>
+            <span>GUI origin for CORS</span>
+            <strong className="mono">{browserOrigin || 'Loading…'}</strong>
           </div>
         </div>
 
-        {state.apiUrlSource === 'browser' ? (
-          <form action={resetApiUrl}>
-            <button type="submit" className="secondary-button">
-              Reset to deployment default
-            </button>
-          </form>
-        ) : null}
+        <div className="connection-actions">
+          {browserApiUrl ? (
+            <>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => void refresh()}
+                disabled={connectionStatus === 'connecting'}
+              >
+                Test connection
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  resetBrowserApiUrl();
+                  setApiUrl(state.environmentApiUrl ?? '');
+                }}
+              >
+                Clear browser URL
+              </button>
+            </>
+          ) : null}
+        </div>
       </section>
 
       <section className="panel">
