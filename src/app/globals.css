@@ -408,6 +408,64 @@ select:focus {
   font-size: 12px;
 }
 
+.connection-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.connection-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.connection-form label span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.connection-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.connection-input-row input {
+  min-width: 0;
+}
+
+.connection-meta {
+  display: grid;
+  gap: 0;
+  margin: 4px 0 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.connection-meta > div {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.5fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.connection-meta span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.connection-meta strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.secondary-button {
+  background: var(--surface-2);
+  color: var(--muted-strong);
+}
+
 .detail-list {
   margin: 0;
 }
@@ -832,6 +890,15 @@ td .subtle {
 
   .stack-row .pill {
     flex: 0 0 auto;
+  }
+
+  .connection-input-row,
+  .connection-meta > div {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-input-row button {
+    width: 100%;
   }
 
   .detail-list > div {
