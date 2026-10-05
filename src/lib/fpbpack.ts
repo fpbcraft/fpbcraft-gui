@@ -264,7 +264,7 @@ async function modifiedAt(path: string): Promise<string | null> {
 }
 
 export async function loadDashboardState(): Promise<DashboardState> {
-  if (process.env.FPBPACK_DEMO === 'true') {
+  if (process.env.FPBPACK_DEMO === 'true' || process.env.VERCEL === '1') {
     return {
       inventory: demoInventory,
       report: demoReport,
