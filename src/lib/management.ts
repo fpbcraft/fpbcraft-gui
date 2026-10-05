@@ -1,4 +1,4 @@
-import {loadApiUrlConfig, type ApiUrlSource} from '@/lib/api-config';
+import {normalizeApiUrl, type ApiUrlSource} from '@/lib/api-config';
 import {
   displayModName,
   displayModVersion,
@@ -106,8 +106,8 @@ async function loadFromApi(baseUrl: string): Promise<ManagementState> {
     diagnostics,
     source: 'api',
     apiUrl: baseUrl,
-    apiUrlSource: 'none',
-    environmentApiUrl: null,
+    apiUrlSource: 'environment',
+    environmentApiUrl: baseUrl,
     errors: [],
   };
 }
@@ -235,36 +235,32 @@ async function loadLegacyState(
 }
 
 export async function loadManagementState(): Promise<ManagementState> {
-  const config = await loadApiUrlConfig();
-  if (!config.url) {
+  const configured = process.env.FPBPACK_API_URL?.trim() ?? '';
+  if (!configured) {
+    return loadLegacyState();
+  }
+
+  let baseUrl: string;
+  try {
+    baseUrl = normalizeApiUrl(configured);
+  } catch (error: unknown) {
     return loadLegacyState(
-      undefined,
-      null,
-      config.source,
-      config.environmentDefault,
+      'Invalid FPBPACK_API_URL: ' +
+        (error instanceof Error ? error.message : String(error)),
     );
   }
 
-  const baseUrl = config.url;
   try {
-    const state = await loadFromApi(baseUrl);
-    return {
-      ...state,
-      apiUrl: baseUrl,
-      apiUrlSource: config.source,
-      environmentApiUrl: config.environmentDefault,
-    };
+    return await loadFromApi(baseUrl);
   } catch (error: unknown) {
-    const message =
-      'FPBPack API unavailable at ' +
-      baseUrl +
-      ': ' +
-      (error instanceof Error ? error.message : String(error));
     return loadLegacyState(
-      message,
+      'FPBPack API unavailable at ' +
+        baseUrl +
+        ': ' +
+        (error instanceof Error ? error.message : String(error)),
       baseUrl,
-      config.source,
-      config.environmentDefault,
+      'environment',
+      baseUrl,
     );
   }
 }
