@@ -3,9 +3,10 @@ import type {ReactNode} from 'react';
 
 const nav = [
   {href: '/', label: 'Overview'},
+  {href: '/updates', label: 'Updates'},
   {href: '/mods', label: 'Mods'},
-  {href: '/sources', label: 'Sources'},
-  {href: '/health', label: 'Health'},
+  {href: '/history', label: 'History'},
+  {href: '/settings', label: 'Settings'},
 ];
 
 export function Shell({children}: {children: ReactNode}) {
@@ -16,7 +17,7 @@ export function Shell({children}: {children: ReactNode}) {
           <div className="brand-mark">FP</div>
           <div>
             <strong>FPBCraft</strong>
-            <span>Server control</span>
+            <span>Mod management</span>
           </div>
         </div>
 
@@ -31,8 +32,8 @@ export function Shell({children}: {children: ReactNode}) {
         <div className="sidebar-footer">
           <span className="dot dot-good" />
           <div>
-            <strong>Read-only mode</strong>
-            <span>Filesystem mounted :ro</span>
+            <strong>Discover &amp; Decide</strong>
+            <span>No live JAR mutation</span>
           </div>
         </div>
       </aside>
