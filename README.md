@@ -1,6 +1,6 @@
 # FPBCraft GUI
 
-> See [Product & Architecture Plan](docs/PRODUCT_ARCHITECTURE.md) for the agreed target behavior and implementation boundaries.
+> See [Product & Architecture Plan](docs/PRODUCT_ARCHITECTURE.md) for the agreed target behavior and [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) for the deliberately short delivery sequence.
 
 Responsive web dashboard for FPBPack and the FPBCraft Minecraft server.
 
