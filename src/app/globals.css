@@ -466,6 +466,17 @@ select:focus {
   color: var(--muted-strong);
 }
 
+.connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .detail-list {
   margin: 0;
 }
@@ -713,7 +724,7 @@ td .subtle {
 
   .nav {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
   }
 
