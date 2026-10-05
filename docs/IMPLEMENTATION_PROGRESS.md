@@ -49,9 +49,9 @@ The user merges PRs manually. These branches must not be merged automatically.
 ### Completed
 
 - [x] Move navigation to Overview / Updates / Mods / History / Settings.
-- [x] Keep `FPBPACK_API_URL` as an optional server-side deployment default/fallback.
+- [x] Keep `FPBPACK_API_URL` as an optional deployment default, but pass it to the client so the browser—not Vercel—opens the API connection.
 - [x] Allow the API URL to be configured in the GUI and persisted in browser local storage.
-- [x] Connect to browser-configured APIs directly from the user's device, so a Vercel-hosted GUI can reach an Unraid LAN service without exposing FPBPack publicly.
+- [x] Connect every API target (browser override or deployment default) directly from the user's device, so a Vercel-hosted GUI can reach an Unraid LAN service without exposing FPBPack publicly.
 - [x] Add Chrome Local Network Access-compatible browser requests and exact-origin backend CORS configuration.
 - [x] Show active backend URL/source, GUI CORS origin, connection status, retry, and clear controls in Settings.
 - [x] Preserve the existing read-only JSON mount as a compatibility fallback.
