@@ -146,27 +146,28 @@ export default function SettingsPage() {
         </div>
 
         <div className="connection-actions">
+          {state.apiUrl ? (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => void refresh()}
+              disabled={connectionStatus === 'connecting'}
+            >
+              Test connection
+            </button>
+          ) : null}
           {browserApiUrl ? (
-            <>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => void refresh()}
-                disabled={connectionStatus === 'connecting'}
-              >
-                Test connection
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setApiUrl(state.environmentApiUrl ?? '');
-                  void resetBrowserApiUrl();
-                }}
-              >
-                Clear browser URL
-              </button>
-            </>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setApiUrl(state.environmentApiUrl ?? '');
+                void resetBrowserApiUrl();
+              }}
+              disabled={connectionStatus === 'connecting'}
+            >
+              Clear browser URL
+            </button>
           ) : null}
         </div>
       </section>
