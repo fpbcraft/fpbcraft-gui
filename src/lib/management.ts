@@ -85,33 +85,6 @@ function summarize(findings: DiagnosticFinding[]): DiagnosticSummary {
   return summary;
 }
 
-async function fetchApi<T>(baseUrl: string, path: string): Promise<T> {
-  const response = await fetch(baseUrl + path, {cache: 'no-store'});
-  if (!response.ok) {
-    throw new Error(path + ' returned HTTP ' + response.status);
-  }
-  return (await response.json()) as T;
-}
-
-async function loadFromApi(baseUrl: string): Promise<ManagementState> {
-  const [status, modsResponse, diagnostics] = await Promise.all([
-    fetchApi<ManagementStatus>(baseUrl, '/api/status'),
-    fetchApi<{mods: ManagementMod[]}>(baseUrl, '/api/mods'),
-    fetchApi<DiagnosticReport>(baseUrl, '/api/diagnostics'),
-  ]);
-
-  return {
-    status,
-    mods: modsResponse.mods,
-    diagnostics,
-    source: 'api',
-    apiUrl: baseUrl,
-    apiUrlSource: 'environment',
-    environmentApiUrl: baseUrl,
-    errors: [],
-  };
-}
-
 async function loadLegacyState(
   apiError?: string,
   apiUrl: string | null = null,
@@ -240,9 +213,9 @@ export async function loadManagementState(): Promise<ManagementState> {
     return loadLegacyState();
   }
 
-  let baseUrl: string;
+  let environmentApiUrl: string;
   try {
-    baseUrl = normalizeApiUrl(configured);
+    environmentApiUrl = normalizeApiUrl(configured);
   } catch (error: unknown) {
     return loadLegacyState(
       'Invalid FPBPACK_API_URL: ' +
@@ -250,17 +223,7 @@ export async function loadManagementState(): Promise<ManagementState> {
     );
   }
 
-  try {
-    return await loadFromApi(baseUrl);
-  } catch (error: unknown) {
-    return loadLegacyState(
-      'FPBPack API unavailable at ' +
-        baseUrl +
-        ': ' +
-        (error instanceof Error ? error.message : String(error)),
-      baseUrl,
-      'environment',
-      baseUrl,
-    );
-  }
+  // This is only a browser connection default. The Next/Vercel server must
+  // never attempt to reach a private LAN backend.
+  return loadLegacyState(undefined, null, 'none', environmentApiUrl);
 }
