@@ -1,5 +1,7 @@
 # FPBCraft GUI
 
+> See [Product & Architecture Plan](docs/PRODUCT_ARCHITECTURE.md) for the agreed target behavior and implementation boundaries.
+
 Responsive web dashboard for FPBPack and the FPBCraft Minecraft server.
 
 The initial release is intentionally **read-only**. It reads FPBPack inventory/catalog state from bind-mounted host files and does not expose update or deployment actions.
