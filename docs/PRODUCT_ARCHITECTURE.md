@@ -621,46 +621,15 @@ Before any future public/remote exposure, authentication and transport security 
 
 ## 25. Implementation sequence
 
-The preferred sequence from here is:
+The detailed delivery plan lives in [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).
 
-### Phase 1 — foundation
-1. finalize this architecture document;
-2. clean the existing GUI to match the information architecture;
-3. remove migration/debug-oriented UI from primary screens;
-4. establish shared domain types between FPBPack responses and GUI consumption.
+To keep implementation fast, remaining work is intentionally grouped into only three substantial slices:
 
-### Phase 2 — FPBPack diagnostics and discovery
-5. add `doctor`;
-6. implement safe update discovery;
-7. implement dependency-aware candidate resolution;
-8. implement pin/ignore/ignored-version policy;
-9. expose changelog/provider metadata.
+1. **Discover & Decide** — update discovery, compatibility/dependencies, changelogs, icons, pin/ignore state, local API, and the useful admin UI.
+2. **Plan & Protect** — deterministic dry-run plans, prefetch/verification, persistent state, external-change detection, backups, review UI, and history.
+3. **Apply & Restore** — controlled live mutation, explicit Crafty stop/start actions, manual restore, retention, and final operational/mobile polish.
 
-### Phase 3 — planning
-10. implement `plan` as a pure/dry-run operation;
-11. expose reviewable plan objects over the local API;
-12. build the Updates UI and mod-detail changelog modal.
-
-### Phase 4 — state/history
-13. add persistent management state;
-14. detect external changes;
-15. add backup/restore-point metadata;
-16. add operation history;
-17. implement fixed-count retention.
-
-### Phase 5 — controlled apply
-18. prefetch and verify the entire plan;
-19. add explicit Crafty stop/start controls;
-20. add transactional apply behavior;
-21. add manual restore from history;
-22. keep server restart manual.
-
-### Phase 6 — UI refinement
-23. refine desktop density;
-24. verify full mobile feature parity;
-25. add provider icons/mod icons;
-26. improve loading/progress/error states;
-27. add accessibility and keyboard-navigation checks.
+Avoid creating additional micro-slices for features that naturally belong inside one of these three unless an unforeseen architectural blocker requires it.
 
 ## 26. Product rules that should not silently change
 
