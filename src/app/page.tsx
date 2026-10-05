@@ -21,9 +21,12 @@ export default async function OverviewPage() {
         title="Server overview"
         description="A read-only view of the current FPBCraft inventory and management state."
         action={
-          <Pill tone={issues === 0 ? 'good' : 'warn'}>
-            {issues === 0 ? 'Healthy' : `${issues} findings`}
-          </Pill>
+          <div className="header-pills">
+            {state.mode === 'demo' ? <Pill tone="blue">Demo data</Pill> : null}
+            <Pill tone={issues === 0 ? 'good' : 'warn'}>
+              {issues === 0 ? 'Healthy' : `${issues} findings`}
+            </Pill>
+          </div>
         }
       />
 
