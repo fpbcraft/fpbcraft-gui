@@ -1,0 +1,20 @@
+services:
+  fpbcraft-gui:
+    build: .
+    image: fpbcraft-gui:local
+    container_name: fpbcraft-gui
+    user: "${PUID:-99}:${PGID:-100}"
+    ports:
+      - "${FPBCRAFT_GUI_PORT:-8765}:3000"
+    environment:
+      NODE_ENV: production
+      FPBPACK_INVENTORY_PATH: /data/fpbpack-inventory-v2.json
+      FPBPACK_REPORT_PATH: /data/fpbpack-modpack/migration-report.json
+      FPBPACK_SERVER_ROOT: /server
+    volumes:
+      - ${FPBPACK_DATA_ROOT:-/mnt/gamestorage/crafty-4}:/data:ro
+      - ${FPBCRAFT_SERVER_ROOT:-/mnt/gamestorage/crafty-4/servers/99ea61a0-be6a-4d45-987b-db183f0bb45b}:/server:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    restart: unless-stopped
