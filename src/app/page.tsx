@@ -1,11 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import {EmptyState, Metric, PageHeader, Pill} from '@/components/ui';
-import {
-  loadManagementState,
-  type DiagnosticLevel,
-} from '@/lib/management';
-
-export const dynamic = 'force-dynamic';
+import {useManagement} from '@/components/management-provider';
+import type {DiagnosticLevel} from '@/lib/management';
 
 function findingTone(level: DiagnosticLevel): 'bad' | 'warn' | 'neutral' {
   if (level === 'blocking') return 'bad';
@@ -13,8 +11,8 @@ function findingTone(level: DiagnosticLevel): 'bad' | 'warn' | 'neutral' {
   return 'neutral';
 }
 
-export default async function OverviewPage() {
-  const state = await loadManagementState();
+export default function OverviewPage() {
+  const {state, connectionStatus} = useManagement();
   const {status, diagnostics} = state;
   const serverTone =
     status.server_state === 'running'
@@ -32,11 +30,15 @@ export default async function OverviewPage() {
         action={
           <div className="header-pills">
             <Pill tone={state.source === 'api' ? 'good' : 'blue'}>
-              {state.source === 'api'
-                ? 'FPBPack API'
-                : state.source === 'demo'
-                  ? 'Demo data'
-                  : 'Legacy data source'}
+              {connectionStatus === 'connecting'
+                ? 'Connecting…'
+                : state.source === 'api'
+                  ? state.apiUrlSource === 'browser'
+                    ? 'LAN API'
+                    : 'FPBPack API'
+                  : state.source === 'demo'
+                    ? 'Demo data'
+                    : 'Legacy data source'}
             </Pill>
             <Pill tone={diagnostics.summary.blocking > 0 ? 'bad' : 'good'}>
               {diagnostics.summary.blocking > 0
