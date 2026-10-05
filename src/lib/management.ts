@@ -1,3 +1,4 @@
+import {loadApiUrlConfig, type ApiUrlSource} from '@/lib/api-config';
 import {
   displayModName,
   displayModVersion,
@@ -60,6 +61,9 @@ export interface ManagementState {
   diagnostics: DiagnosticReport;
   mods: ManagementMod[];
   source: 'api' | 'legacy' | 'demo';
+  apiUrl: string | null;
+  apiUrlSource: ApiUrlSource;
+  environmentApiUrl: string | null;
   errors: string[];
 }
 
@@ -101,11 +105,19 @@ async function loadFromApi(baseUrl: string): Promise<ManagementState> {
     mods: modsResponse.mods,
     diagnostics,
     source: 'api',
+    apiUrl: baseUrl,
+    apiUrlSource: 'none',
+    environmentApiUrl: null,
     errors: [],
   };
 }
 
-async function loadLegacyState(apiError?: string): Promise<ManagementState> {
+async function loadLegacyState(
+  apiError?: string,
+  apiUrl: string | null = null,
+  apiUrlSource: ApiUrlSource = 'none',
+  environmentApiUrl: string | null = null,
+): Promise<ManagementState> {
   const legacy = await loadDashboardState();
   const managedByHash = new Map(
     (legacy.report?.managed ?? []).map((entry) => [entry.sha512.toLowerCase(), entry]),
@@ -215,23 +227,44 @@ async function loadLegacyState(apiError?: string): Promise<ManagementState> {
     diagnostics,
     mods,
     source: legacy.mode === 'demo' ? 'demo' : 'legacy',
+    apiUrl,
+    apiUrlSource,
+    environmentApiUrl,
     errors,
   };
 }
 
 export async function loadManagementState(): Promise<ManagementState> {
-  const configuredUrl = process.env.FPBPACK_API_URL?.trim();
-  if (!configuredUrl) return loadLegacyState();
+  const config = await loadApiUrlConfig();
+  if (!config.url) {
+    return loadLegacyState(
+      undefined,
+      null,
+      config.source,
+      config.environmentDefault,
+    );
+  }
 
-  const baseUrl = configuredUrl.replace(/\/$/, '');
+  const baseUrl = config.url;
   try {
-    return await loadFromApi(baseUrl);
+    const state = await loadFromApi(baseUrl);
+    return {
+      ...state,
+      apiUrl: baseUrl,
+      apiUrlSource: config.source,
+      environmentApiUrl: config.environmentDefault,
+    };
   } catch (error: unknown) {
     const message =
       'FPBPack API unavailable at ' +
       baseUrl +
       ': ' +
       (error instanceof Error ? error.message : String(error));
-    return loadLegacyState(message);
+    return loadLegacyState(
+      message,
+      baseUrl,
+      config.source,
+      config.environmentDefault,
+    );
   }
 }
