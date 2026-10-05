@@ -231,6 +231,13 @@ select:focus {
   padding-top: 5px;
 }
 
+.header-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -708,6 +715,10 @@ td .subtle {
 
   .header-action {
     padding-top: 0;
+  }
+
+  .header-pills {
+    justify-content: flex-start;
   }
 
   .metrics-grid {
