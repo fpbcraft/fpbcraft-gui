@@ -10,8 +10,8 @@ Canonical plan: [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
 Working branches:
 
-- backend: `fpbcraft/fpbcraft:feat/discover-decide`, stacked on `feat/fpbpack-ignore-custom`;
-- GUI: `fpbcraft/fpbcraft-gui:feat/discover-decide`, stacked on `feat/initial-unraid-dashboard`.
+- backend: `fpbcraft/fpbcraft:feat/discover-decide` → draft PR #8 targeting `main`; the branch carries the completed FPBPack foundation stack because those intermediate stacked branches were merged/deleted before being promoted to `main`;
+- GUI: `fpbcraft/fpbcraft-gui:feat/discover-decide` → draft PR #2 targeting `main` after the foundation GUI PR merged.
 
 The user merges PRs manually. These branches must not be merged automatically.
 
@@ -78,5 +78,5 @@ Current Slice 1 code is intentionally **read-only**. There is no API or GUI oper
 ## Validation
 
 - Backend draft unit tests were exercised locally against a compile fixture matching the current catalog/inventory types.
-- Repository CI is the authoritative validation for the stacked FPBPack branch.
-- GUI typecheck/build validation is handled by its PR CI because this execution environment cannot reach GitHub/npm directly.
+- Repository CI is the authoritative validation for backend PR #8.
+- GUI typecheck/build validation is handled by PR #2 CI because this execution environment cannot reach GitHub/npm directly.
